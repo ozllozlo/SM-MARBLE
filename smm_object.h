@@ -7,7 +7,7 @@
 
 #ifndef smm_object_h
 #define smm_object_h
-
+#endif
 /* node type :
     lecture,
     restaurant,
@@ -25,33 +25,31 @@
 #define SMMNODE_TYPE_FOODCHANGE          5
 #define SMMNODE_TYPE_FESTIVAL            6
 
-/* grade :
-    A+,
-    A0,
-    A-,
-    B+,
-    B0,
-    B-,
-    C+,
-    C0,
-    C-
-*/
+#define SMMNODE_OBJTYPE_BOARD   0
+#define SMMNODE_OBJTYPE_GRADE   1
+#define SMMNODE_OBJTYPE_FOOD    2
+#define SMMNODE_OBJTYPE_FEST    3
 
+/* grade :
+    AP,
+    A0,
+    AM,
+    BP,
+    B0,
+    BM,
+    CP,
+    C0,
+    CM
+*/
+#define SMMNODE_MAX_GRADE       13
 
 
 //object generation
-int smmObj_genNode(char* name, int type, int credit, int energy);
-char* smmObj_getNodeName(int node_nr);
-int smmObj_getNodeType(int node_nr);
-int smm_Obj_getNodeEnergy(int node_nr);
-char* smmObj_getTypeName(int node_nr);
-int smmObj_getNodeCredit(int node_nr);
-
-//member retrieving
-
-
-//element to string
-
-
-
-#endif /* smm_object_h */
+void* smmObj_genObject(char* name, int odjType, int type, int credit, int energy, int grade);
+char* smmObj_getObjectName(void *ptr);
+int smmObj_getObjectType(void *ptr);
+int smmObj_getObjectEnergy(void *ptr);
+int smmObj_getObjectCredit(void *ptr);
+char* smmObj_getObjectTypeName(void *ptr);
+char* smmObj_getGradeName(void *ptr);
+/* smm_object_h */
