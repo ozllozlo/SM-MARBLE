@@ -192,12 +192,12 @@ int rolldie(int player)
 {
     char c;
     printf("Press any key to roll a die (press g to see grade): ");
-    scanf(" %c", &c);
+    c = getchar();
     
     if (c == 'g'){
         printGrades(player);
+        getchar();
         }
-        
        
         int result = (rand()%MAX_DIE+1);
         printf("\n Die result: %i\n", result);
