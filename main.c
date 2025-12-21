@@ -117,9 +117,9 @@ void printGrades(int player)
     int count = smm_players[player].course_count;
     int i;
 
-    printf("\n\n==========================================\n");
+    printf("\n\n==============================\n");
     printf("   [ %s's Course History ]\n", smm_players[player].name);
-    printf("==========================================\n");
+    printf("==============================\n");
     printf("%-15s\t%s\t%s\n", "Lecture", "Credit", "Grade"); 
     printf("------------------------------------------\n");
 
@@ -194,7 +194,7 @@ void generatePlayers(int n, int initEnergy)
          smm_players[i].course_count = 0;
          
          
-         printf("Input %d-th player name:", i+1);
+         printf("Input %i-th player name:", i+1);
          scanf("%s", &smm_players[i].name[0]);
         
      }
