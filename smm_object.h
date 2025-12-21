@@ -30,17 +30,6 @@
 #define SMMNODE_OBJTYPE_FOOD    2
 #define SMMNODE_OBJTYPE_FEST    3
 
-/* grade :
-    AP,
-    A0,
-    AM,
-    BP,
-    B0,
-    BM,
-    CP,
-    C0,
-    CM
-*/
 #define SMMNODE_MAX_GRADE       13
 
 

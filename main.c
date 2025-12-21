@@ -47,7 +47,7 @@ smm_player_t *smm_players;
 
 int takeLecture(int player, char *lectureName, int credit) //take the lecture (insert a grade of the player)
 {
-           int grade = rand()%13;
+           int grade = rand()%SMMNODE_MAX_GRADE;
            void* ptr = smmObj_genObject(lectureName, SMMNODE_OBJTYPE_GRADE, 0, credit, 0, grade);
            smmdb_addTail(LISTNO_OFFSET_GRADE + player, ptr);
            
@@ -76,7 +76,7 @@ int isGraduated(void)
     int i;
     for(i=0;i<smm_player_nr;i++)
     {
-     if (smm_players[i].credit >= 30 && smm_players[i].pos == 0)
+     if (smm_players[i].credit >= GRADUATE_CREDIT && smm_players[i].pos == 0)
      {
      return i+1;
      }  
@@ -192,13 +192,11 @@ int rolldie(int player)
 {
     char c;
     printf("Press any key to roll a die (press g to see grade): ");
-    c = getchar();
-   
-    
+    scanf(" %c", &c);
     
     if (c == 'g'){
         printGrades(player);
-        getchar();}
+        }
         
        
         int result = (rand()%MAX_DIE+1);
