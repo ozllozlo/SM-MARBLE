@@ -50,6 +50,9 @@ char* smmObj_getObjectName(void *ptr);
 int smmObj_getObjectType(void *ptr);
 int smmObj_getObjectEnergy(void *ptr);
 int smmObj_getObjectCredit(void *ptr);
+int smmObj_getObjectGrade(void *ptr);
 char* smmObj_getObjectTypeName(void *ptr);
 char* smmObj_getGradeName(void *ptr);
+float smmObj_getNodeScore(int gradeIdx);
+char* smmObj_getNodeGradeName(int gradeIdx);
 /* smm_object_h */

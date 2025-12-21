@@ -34,6 +34,7 @@ typedef struct{
     int credit;
     int energy;    
     int flag_graduated;
+    int course_count;
     int grade;
     int is_experimenting;
     int experiment_target;
@@ -42,17 +43,18 @@ typedef struct{
 smm_player_t *smm_players;
 
 
-
-void generatePlayers(int n, int initEnergy); //generate a new player
-void printPlayerStatus(void); //print all player status at the beginning of each turn
-
 //function prototypes
-#if 0
-//void printGrades(int player); //print grade history of the player
-float calcAverageGrade(int player); //calculate average grade of the player
-smmGrade_e takeLecture(int player, char *lectureName, int credit); //take the lecture (insert a grade of the player)
-void printGrades(int player); //print all the grade history of the player
-#endif
+
+int takeLecture(int player, char *lectureName, int credit) //take the lecture (insert a grade of the player)
+{
+           int grade = rand()%13;
+           void* ptr = smmObj_genObject(lectureName, SMMNODE_OBJTYPE_GRADE, 0, credit, 0, grade);
+           smmdb_addTail(LISTNO_OFFSET_GRADE + player, ptr);
+           
+           smm_players[player].course_count++;
+           
+           return grade;
+           }
 
 void* findGrade(int player, char *lectureName) //find the grade from the player's grade history
 {
@@ -87,7 +89,7 @@ void goForward(int player, int step)
 {
    int i;
    void *ptr = smmdb_getData(LISTNO_NODE, smm_players[player].pos);
-   printf("Moving from %i to forward %i steps...\n", smm_players[player].pos, step);  
+   printf("\n Moving from %i to forward %i steps...\n", smm_players[player].pos, step);  
    
    for(i=0;i<step;i++){
                                           
@@ -106,24 +108,23 @@ void goForward(int player, int step)
 
 void printGrades(int player)
 {
+    int list_index = LISTNO_OFFSET_GRADE + player;
+    
+    int count = smm_players[player].course_count;
+    
     int i;
-
-    printf("%s's Grade Status\n", smm_players[player].name);
-
-    for (i = 0; ; i++)
+    for (i = 0; i < count; i++) 
     {
-    void *gradePtr = smmdb_getData(LISTNO_OFFSET_GRADE + player, i);
-
-    if (gradePtr == NULL)
-    break;
-
-    printf("lecture: %s, credit: %i, grade: %s\n",
-               smmObj_getObjectName(gradePtr),
-               smmObj_getObjectCredit(gradePtr),
-               smmObj_getGradeName(gradePtr));
+        void* ptr = smmdb_getData(list_index, i);
+        
+        char* name = smmObj_getObjectName(ptr);
+        int credit = smmObj_getObjectCredit(ptr);
+        int grade_idx = smmObj_getObjectGrade(ptr);
+        
+        printf("%s\t: %i credit, Grade %s\n", smm_players[player].name, credit, smmObj_getNodeGradeName(grade_idx));
     }
+    printf("-----------------------------------\n");
 }
-
 
 void printPlayerStatus(void)
 {    int i;
@@ -134,6 +135,35 @@ void printPlayerStatus(void)
      }
 }
 
+float calcAverageGrade(int player)
+{
+ 
+    int list_index = LISTNO_OFFSET_GRADE + player;
+   
+    int count = smm_players[player].course_count;
+    
+    if (count == 0) return 0.0;
+
+    float total_score = 0.0;
+    int total_credit = 0; 
+    
+    int i;
+    for (i = 0; i < count; i++)
+    {
+        void* ptr = smmdb_getData(list_index, i);
+        
+        int credit = smmObj_getObjectCredit(ptr);
+        int grade_idx = smmObj_getObjectGrade(ptr);
+        
+        total_score += smmObj_getNodeScore(grade_idx) * credit;
+        
+        total_credit += credit;
+    }
+   
+    if (total_credit == 0) return 0.0;
+    
+    return total_score / total_credit;
+}
 
 void generatePlayers(int n, int initEnergy)
 {
@@ -149,6 +179,8 @@ void generatePlayers(int n, int initEnergy)
          smm_players[i].flag_graduated = 0;
          smm_players[i].is_experimenting = 0; 
          smm_players[i].experiment_target = 0;
+         smm_players[i].course_count = 0;
+         
          
          printf("Input %d-th player name:", i+1);
          scanf("%s", &smm_players[i].name[0]);
@@ -170,7 +202,7 @@ int rolldie(int player)
         
        
         int result = (rand()%MAX_DIE+1);
-        printf("Die result: %i\n", result);
+        printf("\n Die result: %i\n", result);
         return result;
     
 }
@@ -187,8 +219,8 @@ void actionNode(int player)
     int grade;
     void *gradePtr;
     
-    printf("\n --> player %i pos: %i, type: %s, credit: %i, energy: %i\n",
-           player+1, smm_players[player].pos, smmObj_getObjectTypeName(ptr), credit, energy);
+    printf("\n --> player %s pos: %i, type: %s, credit: %i, energy: %i\n",
+           smm_players[player].name, smm_players[player].pos, smmObj_getObjectTypeName(ptr), credit, energy);
            
     switch(type)
     {

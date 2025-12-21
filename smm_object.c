@@ -58,6 +58,26 @@ static char smmObj_gradeName[SMMNODE_MAX_GRADE][MAX_CHARNAME] = {
      "DM",
      "F"
        };
+       
+static char *SMM_GRADE_NAME[] = {
+     "AP",
+     "A0",
+     "AM",
+     "BP",
+     "B0",
+     "BM",
+     "CP",
+     "C0",
+     "CM",
+     "DP",
+     "D0",
+     "DM",
+     "F"
+       };
+       
+static float SMM_GRADE_SCORE[] = {
+      4.3, 4.0, 3,7, 3.3, 3.0, 2.7, 2.3, 2.0, 1.7, 1.3, 1.0, 0.7, 0.0
+       };
 
 //structure type definition
 
@@ -130,4 +150,22 @@ char* smmObj_getGradeName(void *ptr)
 {
  smmObj_object_t* objPtr = (smmObj_object_t*)ptr;
  return (smmObj_gradeName[objPtr->grade]);
+}
+
+int smmObj_getObjectGrade(void *ptr)
+{
+    smmObj_object_t* objPtr=(smmObj_object_t*)ptr;
+    return objPtr->grade;
+}
+
+float smmObj_getNodeScore(int gradeIdx)
+{
+    if (gradeIdx < 0 || gradeIdx >= 13) return 0;
+    return SMM_GRADE_SCORE[gradeIdx];
+}
+
+char* smmObj_getNodeGradeName(int gradeIdx)
+{
+    if (gradeIdx < 0 || gradeIdx >= 13) return "F";
+    return SMM_GRADE_NAME[gradeIdx]; 
 }
