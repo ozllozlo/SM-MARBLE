@@ -47,30 +47,35 @@ smm_player_t *smm_players;
 
 int takeLecture(int player, char *lectureName, int credit) //take the lecture (insert a grade of the player)
 {
-           int grade = rand()%SMMNODE_MAX_GRADE;
-           void* ptr = smmObj_genObject(lectureName, SMMNODE_OBJTYPE_GRADE, 0, credit, 0, grade);
-           smmdb_addTail(LISTNO_OFFSET_GRADE + player, ptr);
+    int grade = rand()%SMMNODE_MAX_GRADE;
+    void* ptr = smmObj_genObject(lectureName, SMMNODE_OBJTYPE_GRADE, 0, credit, 0, grade);
+    smmdb_addTail(LISTNO_OFFSET_GRADE + player, ptr);
            
-           smm_players[player].course_count++;
-           
-           return grade;
+    smm_players[player].course_count++;
+    
+    return grade;
            }
 
-void* findGrade(int player, char *lectureName) //find the grade from the player's grade history
+
+
+void* findGrade(int player, char *lectureName) 
 {
-      int size = smmdb_len(LISTNO_OFFSET_GRADE+player);
-      int i;
-      
-      for(i=0;i<size;i++)
-      {
-        void *ptr = smmdb_getData(LISTNO_OFFSET_GRADE+player, i);          
-        if(strcmp(smmObj_getObjectName(ptr), lectureName) == 0)
+    int count = smmdb_len(LISTNO_OFFSET_GRADE + player);
+    int i;
+    
+    for (i=0; i<count; i++) 
+    {
+    void *ptr = smmdb_getData(LISTNO_OFFSET_GRADE + player, i);
+    
+    if (ptr != NULL && strcmp(smmObj_getObjectName(ptr), lectureName) == 0)
         {
-          return ptr;                                     
-        }       
-      }
-      return NULL;
+            return ptr; 
+        }
+    }
+    
+    return NULL; 
 }
+
 int isGraduated(void)
 {
     int i;
@@ -105,7 +110,7 @@ void goForward(int player, int step)
     }                                                                        
     }
     }
-
+/*
 void printGrades(int player)
 {
     int list_index = LISTNO_OFFSET_GRADE + player;
@@ -125,7 +130,38 @@ void printGrades(int player)
     }
     printf("-----------------------------------\n");
 }
+*/
 
+void printGrades(int player)
+{
+    int list_index = LISTNO_OFFSET_GRADE + player;
+    int count = smm_players[player].course_count;
+    int i;
+    
+    // 보기 좋게 제목 출력
+    printf("\n\n==========================================\n");
+    printf("   [ %s's Course History ]\n", smm_players[player].name);
+    printf("==========================================\n");
+    printf("%-15s\t%s\t%s\n", "Lecture", "Credit", "Grade"); // 헤더 정렬
+    printf("------------------------------------------\n");
+
+    for (i = 0; i < count; i++) 
+    {
+        void* ptr = smmdb_getData(list_index, i);
+        
+        // 데이터가 혹시 비어있을 경우 대비
+        if (ptr == NULL) continue;
+        
+        char* lectureName = smmObj_getObjectName(ptr);
+        int credit = smmObj_getObjectCredit(ptr);
+        int grade_idx = smmObj_getObjectGrade(ptr);
+        
+        // [핵심 수정] 기존에는 플레이어 이름을 출력했지만, 이제 강의 이름(lectureName)을 출력합니다.
+        // %-15s : 왼쪽 정렬로 15칸 확보 (줄 맞춤)
+        printf("%-15s\t%i\t%s\n", lectureName, credit, smmObj_getNodeGradeName(grade_idx));
+    }
+    printf("------------------------------------------\n");
+}
 void printPlayerStatus(void)
 {    int i;
      for (i=0;i<smm_player_nr;i++)
@@ -214,8 +250,6 @@ void actionNode(int player)
     int type = smmObj_getObjectType(ptr);
     int credit = smmObj_getObjectCredit(ptr);
     int energy = smmObj_getObjectEnergy(ptr);
-    int grade;
-    void *gradePtr;
     
     printf("\n --> player %s pos: %i, type: %s, credit: %i, energy: %i\n",
            smm_players[player].name, smm_players[player].pos, smmObj_getObjectTypeName(ptr), credit, energy);
@@ -234,33 +268,44 @@ void actionNode(int player)
              smm_players[player].credit += credit;
              smm_players[player].energy -= energy;
 
-            grade = rand() % SMMNODE_MAX_GRADE;
+            /*grade = rand() % SMMNODE_MAX_GRADE;
             gradePtr = smmObj_genObject(smmObj_getObjectName(ptr), 
                            SMMNODE_OBJTYPE_GRADE, type, credit, energy, grade);
             smmdb_addTail(LISTNO_OFFSET_GRADE + player, gradePtr);
-            printf("  -> Course registered.\n");
+            smm_players[player].course_count++;
+            */
+            
+            int resultGrade = takeLecture(player, smmObj_getObjectName(ptr), credit);
+            
+            printf("  -> Course registered. (Grade: %s)\n", smmObj_getNodeGradeName(resultGrade));
             }
             else 
             {
             printf("  -> Course skipped.\n");
             } } 
-            else if (smm_players[player].energy < energy)
-            {
-            printf("  -> Not enough energy to take this lecture!\n");
-            }
-            break;
+            else if (findGrade(player, smmObj_getObjectName(ptr)) != NULL) // 이미 수강한 경우 메시지 추가 추천
+             {
+                 printf("  -> Already took this lecture.\n");
+             }
+             else if (smm_players[player].energy < energy)
+             {
+                 printf("  -> Not enough energy to take this lecture!\n");
+             }
+             break;
              
         case SMMNODE_TYPE_RESTAURANT:
              smm_players[player].energy += energy;
+             printf(" -> Energy recharged! (Current: %i)\n", smm_players[player].energy);
              break;
              
         case SMMNODE_TYPE_LABORATORY:
-            
+             {
+             int die = 0;
              
-             if (smm_players[player].is_experimenting) {
+             if (smm_players[player].is_experimenting == 1) {
              smm_players[player].energy -= energy; 
         
-             int die = rand() % MAX_DIE + 1;
+             die = rand() % MAX_DIE + 1;
              printf("Experimenting... Die rolled: %i (Target: %i)\n", die, smm_players[player].experiment_target);
         
              if (die >= smm_players[player].experiment_target) {
@@ -271,7 +316,7 @@ void actionNode(int player)
              }
              } else {
              printf("Just visiting the laboratory.\n");
-             }
+             }}
              break;
              
         case SMMNODE_TYPE_HOME:
@@ -282,13 +327,14 @@ void actionNode(int player)
              }
              break;
              
-        case SMMNODE_TYPE_GOTOLAB:
+        /*case SMMNODE_TYPE_GOTOLAB:
              
-             printf(" >> Mission: Go to laboratory! Setting experiment target...\n");
+             {printf(" >> Mission: Go to laboratory! Setting experiment target...\n");
              smm_players[player].is_experimenting = 1; 
              smm_players[player].experiment_target = (rand() % MAX_DIE) + 1; 
              
              int i;
+             int labFound = 0;
              for (i=0; i < smm_board_nr; i++) {
              void *searchNode = smmdb_getData(LISTNO_NODE, i);
              if (smmObj_getObjectType(searchNode) == SMMNODE_TYPE_LABORATORY) {
@@ -297,7 +343,40 @@ void actionNode(int player)
             break;
              }
              }
+             if(labFound==0){
+             printf("[ERROR] Laboratory node not found! Experiment cancelled.\n")    
+             smm_players[player].is_experimenting=0;            
              break;
+            */
+        case SMMNODE_TYPE_GOTOLAB:
+            
+             {   
+             int i;              
+             int labFound = 0;   
+             void *searchNode;   
+              
+             printf(" >> Mission: Go to laboratory! Setting experiment target...\n");
+             smm_players[player].is_experimenting = 1; 
+             smm_players[player].experiment_target = (rand() % MAX_DIE) + 1; 
+                 
+             for (i=0; i < smm_board_nr; i++) {
+             searchNode = smmdb_getData(LISTNO_NODE, i); 
+
+             if (smmObj_getObjectType(searchNode) == SMMNODE_TYPE_LABORATORY) {
+             smm_players[player].pos = i;
+             printf("Immediately moved to node %i (Laboratory).\n", i);
+             labFound = 1;
+                         
+             break;
+                     }
+                 }
+                 
+             if (labFound == 0) {
+             printf(" [ERROR] Laboratory node not found! Experiment cancelled.\n");
+             smm_players[player].is_experimenting = 0;
+                 }
+             }  
+             break; 
              
         case SMMNODE_TYPE_FOODCHANGE:
              {
@@ -372,7 +451,7 @@ int main(int argc, const char * argv[]) {
         void* ptr;
         printf("%s %i %i %i\n", name, type, credit, energy);
         ptr = smmObj_genObject(name, SMMNODE_OBJTYPE_BOARD, type, credit, energy, 0);
-        /*smm_board_nr = smmdb_addTail(LISTNO_NODE, ptr);*/
+       
         smmdb_addTail(LISTNO_NODE, ptr);
         smm_board_nr++;
     }
@@ -395,7 +474,7 @@ int main(int argc, const char * argv[]) {
         void* ptr;
         printf("%s %i\n", name,  energy);
         ptr = smmObj_genObject(name, SMMNODE_OBJTYPE_FOOD,0,0, energy,0);
-        /*smm_food_nr = smmdb_addTail(FOODLIST, ptr);*/
+      
         smmdb_addTail(FOODLIST, ptr);
         smm_food_nr++;
     }
@@ -478,7 +557,7 @@ int main(int argc, const char * argv[]) {
         } else {
         printf("%s is experimenting. Cannot move.\n",
         smm_players[turn].name);
-        
+        getchar();
         }
         
 		//4-4. take action at the destination node of the board
